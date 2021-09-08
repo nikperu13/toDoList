@@ -8,9 +8,7 @@
     * like the clear function in the to-do-list, DELETE the item from the FINISHED list so its gone forever.
 
 
-
 */
-
 
 
 //jshint esversion:6
@@ -44,7 +42,8 @@ const itemsSchema = {
   name: String
 }
 
-// model
+
+// Item model
 const Item = mongoose.model("Item",itemsSchema);
 
 // create "variables" to input into database
@@ -180,7 +179,6 @@ app.get("/:customListName", function(req, res){
   })
 
 })
-
 
 
 // Heroku Port
