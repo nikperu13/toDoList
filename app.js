@@ -1,3 +1,18 @@
+
+/* GOALS:
+
+1. create a FINISHED category
+    * once clicked we will remove from list and move it to another list, the "finished" list
+2. add a COMPLETED list button that sends the user to the FINISHED list
+3. create an DELETE function
+    * like the clear function in the to-do-list, DELETE the item from the FINISHED list so its gone forever.
+
+
+
+*/
+
+
+
 //jshint esversion:6
 
 const express = require("express");
