@@ -181,9 +181,7 @@ app.get("/:customListName", function(req, res){
 
 })
 
-app.get("/about", function(req, res){
-  res.render("about");
-});
+
 
 // Heroku Port
 // This allows us to run our "node server" online and/or locally
