@@ -9,6 +9,7 @@
 3. create an DELETE function
     * like the clear function in the to-do-list, DELETE the item from the FINISHED list so its gone forever.
 
+4. fix "favicon.ico" bug when going back and forth from lists and homepage
 
 5. Implement function that deletes the list when clicked
  
@@ -192,12 +193,22 @@ app.post("/delete",function(req,res){
 
 app.post("/newList", (req,res)=>{
   const newListName = req.body.newList;
+  console.log()
   res.redirect("/"+newListName);
   
 })
 
 app.get("/:customListName", function(req, res){
+
+
   const customListName = _.capitalize(req.params.customListName);
+
+  // The browser looks for a Favicon.ico to display when visiting another website which will create 
+  // a new list named "Favicon.ico"
+  // FIXES TEMP PROBLEM
+  if(customListName === "Favicon.ico"){
+    res.redirect("/");
+  }
 
   // findOne() only returns a single document
   List.findOne({name:customListName},function(err,foundList){
