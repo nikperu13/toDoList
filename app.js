@@ -3,11 +3,15 @@
 
 1. create a FINISHED category
     * once clicked we will remove from list and move it to another list, the "finished" list
+
 2. add a COMPLETED list button that sends the user to the FINISHED list
+
 3. create an DELETE function
     * like the clear function in the to-do-list, DELETE the item from the FINISHED list so its gone forever.
 
 
+5. Implement function that deletes the list when clicked
+ 
 */
 
 
@@ -42,7 +46,6 @@ const itemsSchema = {
   name: String
 }
 
-
 // Item model
 const Item = mongoose.model("Item",itemsSchema);
 
@@ -56,15 +59,26 @@ const item2 = new Item({
 });
 
 const item3 = new Item({
-  name: "Press '-' to delete the latest item on the list"
+  name: "Press the button to the left to delete the item from the list"
 });
 
 const defaultItems = [item1, item2, item3];
+
+// finished schema
+const finishedListSchema = {
+  name: String,
+  finished: [itemsSchema]
+};
+
+// finished model
+const FinishedList = mongoose.model("FinishedList", finishedListSchema);
+
 
 // list schema
 const listSchema = {
   name: String,
   items: [itemsSchema],
+  finishedList:[finishedListSchema]
 
 };
 
@@ -80,30 +94,18 @@ const List = mongoose.model("List", listSchema);
 
 app.get("/", function(req, res) {
 
-  // only add items if items collection in database is empty is empty
 
-  Item.find({},function(err, foundItems){
-    if(foundItems.length === 0){
-      Item.insertMany(defaultItems,function(err){
-        if(err){
-          console.log(err);
-        }
-        else{
-          console.log("Successfully saved default items to mongodb database");
-        }
-      });
-      res.redirect("/");
+  List.find({},(err,foundLists)=>{
+    res.render("home",{
+      lists: foundLists
+    })
     }
-    
-    else{
-    res.render("list", {listTitle: "Today", newListItems: foundItems});
-    }
-    
-  });
+  )
 
 });
 
 app.post("/", function(req, res){
+
 
   const itemName = req.body.newItem;
   const listName = req.body.list;
@@ -129,30 +131,70 @@ app.post("/", function(req, res){
 
 });
 
+app.get("/:customListName/:finishedListName",(req,res)=>{
+
+})
+
+// create a app.get("/move") thats moves items from list to finished list
+//  *find item, copy item, add copy to finished list, delete item from list.
+
+app.post("/move", (req,res)=>{
+  
+})
+
+
 app.post("/delete",function(req,res){
 
-  const checkedItemId = req.body.checkbox;
+  // Determine whether user clicked a List or an Item
+
+  const checkedListId = req.body.checkboxList;
+  const checkedItemId = req.body.checkboxItem;
   const listName = req.body.listName;
 
-  if(listName === "Today"){
-    Item.findByIdAndRemove(checkedItemId, function(err){
+
+  console.log(req.body);
+
+  // case 1: list is to be deleted 
+  if(checkedListId){
+    List.deleteOne({name: listName},(err)=>{
       if(!err){
-        console.log("Successfully deleted item");
+        console.log(listName + " has been deleted");
         res.redirect("/");
       }
-    });
-  }else{
-    List.findOneAndUpdate({name: listName},{$pull:{items:{_id:checkedItemId}}}, function(err, foundList){
-        if(!err){
-          res.redirect("/"+listName);
-        }
     })
+  // case 2: item is to be deleted
+  }else if(checkedItemId){
+    List.findOneAndUpdate({name: listName},{$pull:{items:{_id:checkedItemId}}}, function(err, foundList){
+      if(!err){
+        res.redirect("/"+listName);
+      }
+  })
   }
+
+
+  /// THIS BLOCK OF CODE IS NOT NEEDED ANYMORE
+  /// KEEP FOR REFERENCE
+
+  // if(listName === "Today"){
+  //   Item.findByIdAndRemove(checkedItemId, function(err){
+  //     if(!err){
+  //       console.log("Successfully deleted item");
+  //       res.redirect("/");
+  //     }
+  //   });
+
+  
+  
  
   
 
 });
 
+app.post("/newList", (req,res)=>{
+  const newListName = req.body.newList;
+  res.redirect("/"+newListName);
+  
+})
 
 app.get("/:customListName", function(req, res){
   const customListName = _.capitalize(req.params.customListName);
