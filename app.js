@@ -199,12 +199,6 @@ app.get("/:customListName", function(req, res){
 
   const customListName = _.capitalize(req.params.customListName);
 
-  // The browser looks for a Favicon.ico to display when visiting another website which will create 
-  // a new list named "Favicon.ico"
-  // FIXES TEMP PROBLEM
-  
-    
-
   // findOne() only returns a single document
   List.findOne({name:customListName},function(err,foundList){
     if(!err){
