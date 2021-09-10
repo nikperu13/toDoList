@@ -9,6 +9,7 @@
 3. create an DELETE function
     * like the clear function in the to-do-list, DELETE the item from the FINISHED list so its gone forever.
 
+4. make it mobile friendly
 */
 
 
@@ -62,20 +63,28 @@ const item3 = new Item({
 const defaultItems = [item1, item2, item3];
 
 // finished schema
-const finishedListSchema = {
+const finishedItemSchema = {
   name: String,
-  finished: [itemsSchema]
 };
 
 // finished model
-const FinishedList = mongoose.model("FinishedList", finishedListSchema);
+const FinishedItem = mongoose.model("Finished-Item", finishedItemSchema);
 
+const finishedItem1 = new FinishedItem ({
+  name: "Collection of completed Items"
+})
+
+const finishedItem2 = new FinishedItem({
+  name: "click the button on the left to permanently delete item"
+})
+
+const defaultFinishedItems = [finishedItem1,finishedItem2];
 
 // list schema
 const listSchema = {
   name: String,
   items: [itemsSchema],
-  finishedList:[finishedListSchema]
+  finishedItems:[finishedItemSchema]
 
 };
 
@@ -111,26 +120,17 @@ app.post("/", function(req, res){
     name: itemName
   });
 
-  if(listName === "Today"){
-    // mongoose shortcut to insert one
-    item.save();
-
-    // redirects to the route "/" app.get and renders our results
-    res.redirect("/");
-  }
-  else{
-    List.findOne({name:listName}, function(err, foundList){
+  List.findOne({name:listName}, function(err, foundList){
+    if(!err){
       foundList.items.push(item);
       foundList.save();
       res.redirect("/"+listName);
-    })
-  }
+    }
+  })
+
 
 });
 
-app.get("/:customListName/:finishedListName",(req,res)=>{
-
-})
 
 // create a app.get("/move") thats moves items from list to finished list
 //  *find item, copy item, add copy to finished list, delete item from list.
@@ -160,6 +160,7 @@ app.post("/delete",function(req,res){
       }
     })
   // case 2: item is to be deleted
+  // case 2.5: determine whether item is "finished" or not
   }else if(checkedItemId){
     List.findOneAndUpdate({name: listName},{$pull:{items:{_id:checkedItemId}}}, function(err, foundList){
       if(!err){
@@ -168,28 +169,12 @@ app.post("/delete",function(req,res){
   })
   }
 
-
-  /// THIS BLOCK OF CODE IS NOT NEEDED ANYMORE
-  /// KEEP FOR REFERENCE
-
-  // if(listName === "Today"){
-  //   Item.findByIdAndRemove(checkedItemId, function(err){
-  //     if(!err){
-  //       console.log("Successfully deleted item");
-  //       res.redirect("/");
-  //     }
-  //   });
-
   
-  
- 
-  
-
 });
 
 app.post("/newList", (req,res)=>{
+
   const newListName = req.body.newList;
-  console.log()
   res.redirect("/"+newListName);
   
 })
@@ -198,6 +183,10 @@ app.get("/:customListName", function(req, res){
 
 
   const customListName = _.capitalize(req.params.customListName);
+  
+  const urlName = customListName.replace(/ /g,"%20");
+
+  
 
   // findOne() only returns a single document
   List.findOne({name:customListName},function(err,foundList){
@@ -206,20 +195,74 @@ app.get("/:customListName", function(req, res){
         //create new list
         const list = new List({
           name: customListName,
-          items: defaultItems
+          items: defaultItems,
+          finishedItems: defaultFinishedItems
         });
 
         list.save();
+
+        console.log("Shouldn't make it here since list already exists")
         
         res.redirect("/"+customListName);
       }
       else{
-        // show an existing list
-        res.render("list", {listTitle: foundList.name , newListItems: foundList.items})
+        console.log(foundList.name)
+        //show an existing list
+        res.render("list", 
+        {
+          listTitle: foundList.name ,
+          listItems: foundList.items,
+          path: urlName+"/finish",
+          task:"Completed"
+        })
+        
       }
     }
   })
 
+})
+
+app.get("/:customList/finish",(req,res)=>{
+  
+
+  const customList = _.capitalize(req.params.customList);
+
+  
+  const urlName = customList.replace(/ /g,"%20");
+
+ console.log("TEST");
+
+
+  List.findOne({name:customList}, (err, completedList)=>{
+    // show an existing list
+    if(!err){
+      if(!completedList){
+        //create new list
+        const list = new List({
+          name: customList,
+          items: defaultItems,
+          finishedItems: defaultFinishedItems
+        });
+
+        list.save();
+          
+        res.redirect("/"+customList+"/finish");
+      }
+
+      else{
+        res.render("list",
+        {
+          listTitle: completedList.name ,
+          listItems: completedList.finishedItems,
+          path: "/"+urlName,
+          task:"To-Do List"
+        })
+        
+      }
+    }
+  })
+
+  
 })
 
 
