@@ -1,10 +1,12 @@
 
 /* GOALS:
 
-1. create a FINISHED category
+1. create a FINISHED category ** DONE (1/2)**
     * once clicked we will remove from list and move it to another list, the "finished" list
 
-2. add a COMPLETED list button that sends the user to the FINISHED list
+2.** DONE (2/2)**
+  render "list.ejs" when in /:customList/finish 
+    * code looks right but doesn't render... might be problem with routing parameter
 
 3. create an DELETE function
     * like the clear function in the to-do-list, DELETE the item from the FINISHED list so its gone forever.
@@ -28,6 +30,7 @@ app.set('view engine', 'ejs');
 
 // necessary for using body-parser
 app.use(bodyParser.urlencoded({extended: true}));
+
 app.use(express.static("public"));
 
 // connect to mongodb database
@@ -208,7 +211,7 @@ app.get("/:customListName", function(req, res){
       else{
         console.log(foundList.name)
         //show an existing list
-        res.render("list", 
+        res.render("list",
         {
           listTitle: foundList.name ,
           listItems: foundList.items,
