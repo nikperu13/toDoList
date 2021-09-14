@@ -60,7 +60,7 @@ const item2 = new Item({
 });
 
 const item3 = new Item({
-  name: "Press the button to the left to delete the item from the list"
+  name: "Press the button to the left to move item to Completed List"
 });
 
 const defaultItems = [item1, item2, item3];
@@ -78,7 +78,7 @@ const finishedItem1 = new FinishedItem ({
 })
 
 const finishedItem2 = new FinishedItem({
-  name: "click the button on the left to permanently delete item"
+  name: "Click the button on the left to permanently delete item"
 })
 
 const defaultFinishedItems = [finishedItem1,finishedItem2];
@@ -139,7 +139,28 @@ app.post("/", function(req, res){
 //  *find item, copy item, add copy to finished list, delete item from list.
 
 app.post("/move", (req,res)=>{
+
+  const currentItemId = req.body.checkboxItem;
+  const currentItemName = req.body.itemName;
+  const currentList = req.body.listName;
+
+ 
   
+
+  const newFinishedItem = new FinishedItem({
+    name: currentItemName
+  });
+
+  List.findOneAndUpdate({name:currentList},{$pull:{items:{_id:currentItemId}}},(err, foundList)=>{
+    
+    if(!err){
+      foundList.finishedItems.push(newFinishedItem);
+      foundList.save();
+      res.redirect("/"+currentList)
+    }
+    
+  })
+
 })
 
 
@@ -165,9 +186,9 @@ app.post("/delete",function(req,res){
   // case 2: item is to be deleted
   // case 2.5: determine whether item is "finished" or not
   }else if(checkedItemId){
-    List.findOneAndUpdate({name: listName},{$pull:{items:{_id:checkedItemId}}}, function(err, foundList){
+    List.findOneAndUpdate({name: listName},{$pull:{finishedItems:{_id:checkedItemId}}}, function(err, foundList){
       if(!err){
-        res.redirect("/"+listName);
+        res.redirect("/"+listName+"/finish");
       }
   })
   }
@@ -182,8 +203,12 @@ app.post("/newList", (req,res)=>{
   
 })
 
+
+
+
 app.get("/:customListName", function(req, res){
 
+  
 
   const customListName = _.capitalize(req.params.customListName);
   
@@ -210,6 +235,7 @@ app.get("/:customListName", function(req, res){
       }
       else{
         console.log(foundList.name)
+        
         //show an existing list
         res.render("list",
         {
@@ -217,6 +243,7 @@ app.get("/:customListName", function(req, res){
           listItems: foundList.items,
           path: urlName+"/finish",
           task:"Completed"
+          
         })
         
       }
@@ -226,7 +253,6 @@ app.get("/:customListName", function(req, res){
 })
 
 app.get("/:customList/finish",(req,res)=>{
-  
 
   const customList = _.capitalize(req.params.customList);
 
@@ -253,7 +279,7 @@ app.get("/:customList/finish",(req,res)=>{
       }
 
       else{
-        res.render("list",
+        res.render("finished",
         {
           listTitle: completedList.name ,
           listItems: completedList.finishedItems,
